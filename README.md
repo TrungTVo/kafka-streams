@@ -1,5 +1,7 @@
 # Kafka Streams
 
+Reference: https://github.com/confluentinc/learn-kafka-courses/tree/main/kafka-streams
+
 ## Setup sample Kafka cluster and broker
 All of Confluent Kafka config is inside `cp-all-in-one` folder. Run:
 ```
