@@ -57,6 +57,7 @@ public class TopicLoader {
                         "transaction-3000");
                 var producerRecords = rawRecords.stream()
                         .map(r -> {
+                            // different keys might go to same partition
                             if (r.startsWith("orderNumber")) {
                                 return new ProducerRecord<String, String>(inputTopic, "orderNumberKey", r);
                             } else if (r.startsWith("bogus")) {
