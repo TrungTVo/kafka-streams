@@ -29,18 +29,14 @@ public class KTableExample {
         final String inputTopic = streamsProps.getProperty("ktable.input.topic");
         final String outputTopic = streamsProps.getProperty("ktable.output.topic");
 
-        final String orderNumberStart = "orderNumber-";
         KTable<String, String> firstKTable = builder.table(inputTopic,
                 Materialized.<String, String, KeyValueStore<Bytes, byte[]>>as("ktable-store")
                         .withKeySerde(Serdes.String())
                         .withValueSerde(Serdes.String()));
 
         firstKTable.toStream().peek((key, value) -> System.out.println("Incoming record - key " + key + " value " + value))
-                .toTable()
-                .filter((key, value) -> value.contains(orderNumberStart))
                 .mapValues(value -> value.substring(value.indexOf("-") + 1))
                 .filter((key, value) -> Long.parseLong(value) > 1000)
-                .toStream()
                 .peek((key, value) -> System.out.println("Outgoing record - key " + key + " value " + value))
                 .to(outputTopic, Produced.with(Serdes.String(), Serdes.String()));
 

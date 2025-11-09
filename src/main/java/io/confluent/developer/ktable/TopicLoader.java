@@ -2,6 +2,7 @@ package io.confluent.developer.ktable;
 
 import io.confluent.developer.StreamsUtils;
 import org.apache.kafka.clients.admin.Admin;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -30,30 +31,49 @@ public class TopicLoader {
             final String inputTopic = properties.getProperty("ktable.input.topic");
             final String outputTopic = properties.getProperty("ktable.output.topic");
             var topics = List.of(StreamsUtils.createTopic(inputTopic), StreamsUtils.createTopic(outputTopic));
-            adminClient.createTopics(topics);
+            try {
+                CreateTopicsResult createTopicsResult = adminClient.createTopics(topics);
+                createTopicsResult.all().get(); // Wait for topics to be created
+                System.out.println("Topics created successfully");
 
-            Callback callback = (metadata, exception) -> {
-                if (exception != null) {
-                    System.out.printf("Producing records encountered error %s %n", exception);
-                } else {
-                    System.out.printf("Record produced - offset - %d timestamp - %d %n", metadata.offset(),
-                            metadata.timestamp());
-                }
+                Callback callback = (metadata, ex) -> {
+                    if (ex != null) {
+                        System.out.printf("Producing records encountered error %s %n", ex);
+                    } else {
+                        System.out.printf("Record produced - offset - %d timestamp - %d %n", metadata.offset(),
+                                metadata.timestamp());
+                    }
+                };
 
-            };
-
-            var rawRecords = List.of("orderNumber-1001",
-                    "orderNumber-5000",
-                    "orderNumber-999",
-                    "orderNumber-3330",
-                    "bogus-1",
-                    "bogus-2",
-                    "orderNumber-8400");
-            var producerRecords = rawRecords.stream()
-                    .map(r -> new ProducerRecord<String, String>(inputTopic, "order-key", r))
-                    .collect(Collectors.toList());
-            producerRecords.forEach((pr -> producer.send(pr, callback)));
-
+                var rawRecords = List.of("orderNumber-1001",
+                        "orderNumber-5000",
+                        "orderNumber-999",
+                        "orderNumber-3330",
+                        "bogus-1",
+                        "bogus-2",
+                        "orderNumber-8400",
+                        "bogus-3",
+                        "transaction-2000",
+                        "transaction-3000");
+                var producerRecords = rawRecords.stream()
+                        .map(r -> {
+                            if (r.startsWith("orderNumber")) {
+                                return new ProducerRecord<String, String>(inputTopic, "orderNumberKey", r);
+                            } else if (r.startsWith("bogus")) {
+                                return new ProducerRecord<String, String>(inputTopic, "bogusKey", r);
+                            } else {
+                                return new ProducerRecord<String, String>(inputTopic, "transactionKey", r);
+                            }
+                        })
+                        .collect(Collectors.toList());
+                producerRecords.forEach(pr -> producer.send(pr, callback));
+                
+                // Ensure all messages are sent before closing
+                producer.flush();
+            } catch (Exception e) {
+                System.err.printf("Error creating topics or producing messages: %s%n", e.getMessage());
+                throw new RuntimeException(e);
+            }
         }
     }
 }
