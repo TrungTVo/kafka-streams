@@ -52,6 +52,7 @@ var basePackage = 'io.confluent.developer.'
 def exerciseMap = [aggregate: basePackage + 'aggregate.StreamsAggregate',
                    basic    : basePackage + 'basic.BasicStreams',
                    errors: basePackage + 'errors.StreamsErrorHandling',
+                   joins_topic_loader: basePackage + 'joins.TopicLoader',
                    joins: basePackage + 'joins.StreamsJoin',
                    ktable: basePackage + 'ktable.KTableExample',
                    processor: basePackage + 'processor.ProcessorApi',
