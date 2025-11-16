@@ -1,0 +1,6 @@
+{
+  "doc": "Sample schema for author category key",
+  "name": "AuthorKey",
+  "namespace": "io.confluent.developer.avro",
+  "type": "string"
+}

@@ -1,0 +1,23 @@
+{
+  "doc": "Sample schema for author value",
+  "fields": [
+    {
+      "doc": "name of author",
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "doc": "author age",
+      "name": "age",
+      "type": "int"
+    },
+    {
+      "doc": "author email",
+      "name": "email",
+      "type": "string"
+    }
+  ],
+  "name": "AuthorValue",
+  "namespace": "io.confluent.developer.avro",
+  "type": "record"
+}

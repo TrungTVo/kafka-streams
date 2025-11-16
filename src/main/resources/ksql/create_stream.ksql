@@ -1,0 +1,7 @@
+CREATE STREAM `AUTHOR_STREAM` (
+    `CATEGORY` VARCHAR KEY
+) WITH (
+    kafka_topic = 'author',
+    key_format='AVRO',
+    value_format = 'AVRO'
+);
