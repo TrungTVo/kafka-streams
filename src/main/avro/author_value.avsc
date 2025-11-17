@@ -15,6 +15,11 @@
       "doc": "author email",
       "name": "email",
       "type": "string"
+    },
+    {
+      "doc": "Event timestamp in format 'yyyy-MM-dd HH:mm:ss' (UTC)",
+      "name": "timestamp",
+      "type": "string"
     }
   ],
   "name": "AuthorValue",

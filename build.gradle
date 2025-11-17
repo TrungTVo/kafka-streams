@@ -34,6 +34,7 @@ dependencies {
         exclude group: 'org.apache.kafka', module: 'kafka-streams'
         exclude group: 'org.apache.avro', module: 'avro'
     }
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
 
     testImplementation 'org.apache.kafka:kafka-streams-test-utils:3.6.1'
     testImplementation 'junit:junit:4.13.2'
@@ -57,7 +58,8 @@ def exerciseMap = [aggregate: basePackage + 'aggregate.StreamsAggregate',
                    ktable: basePackage + 'ktable.KTableExample',
                    processor: basePackage + 'processor.ProcessorApi',
                    time: basePackage + 'time.StreamsTimestampExtractor',
-                   windows: basePackage + 'windows.StreamsWindows']
+                   windows: basePackage + 'windows.StreamsWindows',
+                   authors_loader: basePackage + 'commonSample.TopicLoader']
 
 task runStreams(type: Exec) {
 

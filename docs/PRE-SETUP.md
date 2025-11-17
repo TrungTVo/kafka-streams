@@ -1,4 +1,13 @@
 # PRE-SETUP with sample topic and messages
+
+Auto create `author` topic and produce sample messages from `authors_data.json` file:
+```
+./gradlew clean build
+./gradlew runStreams -Pargs=authors_loader
+```
+
+Or run manual step by step as follow:
+
 ## Create sample topic
 ```
 kafka-topics \
@@ -57,7 +66,7 @@ kafka-avro-console-producer --bootstrap-server broker:29092 \
     --property key.schema.id=<KEY_SCHEMA_ID> \
     --property value.schema.id=<VALUE_SCHEMA_ID>
 ```
-Key and value is separated by `:`. Sample message:
+Key and value is separated by `:`. Produce some sample messages:
 ```
 "programming":{"name":"trung vo","age":29,"email":"trung.vo@gmail.com"}
 "programming":{"name":"john doe","age":30,"email":"john.doe@gmail.com"}
