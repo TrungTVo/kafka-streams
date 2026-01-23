@@ -27,7 +27,7 @@ public class StreamsUtils {
 
     public static Map<String, Object> propertiesToMap(final Properties properties) {
         final Map<String, Object> configs = new HashMap<>();
-        properties.forEach((key, value) -> configs.put((String) key, (String) value));
+        properties.forEach((key, value) -> configs.put((String) key, value));
         return configs;
     }
 
