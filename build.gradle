@@ -57,7 +57,7 @@ def exerciseMap = [aggregate: basePackage + 'aggregate.StreamsAggregate',
                    joins: basePackage + 'joins.StreamsJoin',
                    ktable: basePackage + 'ktable.KTableExample',
                    processor: basePackage + 'processor.ProcessorApi',
-                   time: basePackage + 'time.StreamsTimestampExtractor',
+                   time: basePackage + 'time.DemoTimestampExtractor',
                    windows: basePackage + 'windows.Windows']
 
 task runStreams(type: Exec) {

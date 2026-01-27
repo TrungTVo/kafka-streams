@@ -1,4 +1,4 @@
-package io.confluent.developer.windows;
+package io.confluent.developer.time;
 
 import io.confluent.developer.StreamsUtils;
 import io.confluent.developer.avro.ElectronicOrder;
@@ -25,33 +25,36 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
-public class Windows {
+public class DemoTimestampExtractor {
 
     public static void main(String[] args) throws IOException {
         String tmpdir = System.getProperty("java.io.tmpdir");
         System.out.println("[State.dir] Directory location for state store: " + tmpdir);
 
         final Properties streamsProps = StreamsUtils.loadProperties();
-        streamsProps.put(StreamsConfig.APPLICATION_ID_CONFIG, "windowed-streams");
+        streamsProps.put(StreamsConfig.APPLICATION_ID_CONFIG, "extractor-windowed-streams");
         // For Debugging - Disable buffering/caching (emit every update immediately)
         streamsProps.put(StreamsConfig.STATESTORE_CACHE_MAX_BYTES_CONFIG, 0);
 
         StreamsBuilder builder = new StreamsBuilder();
-        final String inputTopic = streamsProps.getProperty("windowed.input.topic");
-        final String outputTopic = streamsProps.getProperty("windowed.output.topic");
+        final String inputTopic = streamsProps.getProperty("extractor.input.topic");
+        final String outputTopic = streamsProps.getProperty("extractor.output.topic");
         final Map<String, Object> configMap = StreamsUtils.propertiesToMap(streamsProps);
 
         final SpecificAvroSerde<ElectronicOrder> electronicSerde =
                 StreamsUtils.getSpecificAvroSerde(configMap);
 
         final KStream<String, ElectronicOrder> electronicStream =
-                builder.stream(inputTopic, Consumed.with(Serdes.String(), electronicSerde))
+                builder.stream(
+                            inputTopic,
+                            Consumed.with(Serdes.String(), electronicSerde).withTimestampExtractor(new OrderTimestampExtractor())
+                        )
                         .peek((key, value) -> System.out.println("Incoming record - key: " + key + ", value: " + value));
 
         // Now take the electronicStream object, group by key and perform an aggregation based on time windows
         // Don't forget to convert the KTable returned by the aggregate call back to a KStream using the toStream() method
         electronicStream.groupByKey(Grouped.with(Serdes.String(), electronicSerde))
-                        .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(25)))
+                        .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofHours(1)))
                         .aggregate(
                             () -> "0.0",
                             (key, electronicOrder, total) -> {
