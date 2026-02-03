@@ -7,6 +7,8 @@ import org.apache.kafka.clients.producer.Callback;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -43,8 +45,7 @@ public class StreamsUtils {
             if (exception != null) {
                 System.out.printf("Producing records encountered error %s %n", exception);
             } else {
-                System.out.printf("Record produced - offset - %d timestamp - %d %n", metadata.offset(),
-                        metadata.timestamp());
+                System.out.println("Record produced - offset: " + metadata.offset() + ", timestamp: " + Instant.ofEpochMilli(metadata.timestamp()).atZone(ZoneId.systemDefault()));
             }
 
         };
