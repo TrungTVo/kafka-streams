@@ -75,6 +75,15 @@ task runStreams(type: Exec) {
         group = "Execution"
         println "Using example ${streamsFullPath}"
         description = "Run a Kafka Streams exercise"
-        commandLine "java", "-classpath", sourceSets.main.runtimeClasspath.getAsPath(), streamsFullPath
+        
+        def javaArgs = ["java", "-classpath", sourceSets.main.runtimeClasspath.getAsPath()]
+        
+        // Add system properties if passed (e.g., -Dinstance=2)
+        if (project.hasProperty("instance")) {
+            javaArgs.add("-Dinstance=" + project.getProperty("instance"))
+        }
+        
+        javaArgs.add(streamsFullPath)
+        commandLine javaArgs
     }
 }
