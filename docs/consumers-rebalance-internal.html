@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consumers Rebalance Internal</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --indigo-50: #eef2ff;
+      --indigo-100: #e0e7ff;
+      --indigo-300: #a5b4fc;
+      --indigo-400: #818cf8;
+      --indigo-500: #6366f1;
+      --indigo-600: #4f46e5;
+      --emerald-50: #ecfdf5;
+      --emerald-100: #d1fae5;
+      --emerald-500: #10b981;
+      --emerald-600: #059669;
+      --blue-50: #eff6ff;
+      --blue-100: #dbeafe;
+      --blue-700: #1d4ed8;
+      --blue-800: #1e40af;
+      --amber-50: #fffbeb;
+      --amber-100: #fef3c7;
+      --amber-700: #b45309;
+      --amber-800: #92400e;
+      --red-50: #fef2f2;
+      --red-100: #fee2e2;
+      --red-200: #fecaca;
+      --red-400: #f87171;
+      --red-600: #dc2626;
+      --red-700: #b91c1c;
+      --white: #ffffff;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--slate-50);
+      color: var(--slate-800);
+    }
+
+    button {
+      color: inherit;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    code {
+      background: var(--slate-200);
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-size: 0.9em;
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .shell {
+      width: min(100%, 1152px);
+      margin: 0 auto;
+    }
+
+    .header {
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      color: var(--slate-900);
+      font-size: 30px;
+      line-height: 1.2;
+      margin: 0 0 8px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .header p {
+      color: var(--slate-600);
+      margin: 0;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .canvas {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .panel,
+    .callout,
+    .instance,
+    .app-card,
+    .thread {
+      border: 1px solid var(--slate-200);
+      background: var(--white);
+      box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+    }
+
+    .panel {
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .panel-title,
+    .callout-title,
+    .section-title,
+    .instance-title,
+    .thread-head,
+    .instance-head,
+    .app-head {
+      display: flex;
+      align-items: center;
+    }
+
+    .panel-title {
+      gap: 8px;
+      margin-bottom: 16px;
+      color: var(--indigo-600);
+      font-weight: 700;
+    }
+
+    .control-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .control label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--slate-700);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--slate-100);
+      border-radius: 8px;
+      padding: 8px;
+      min-height: 44px;
+    }
+
+    .icon-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      transition: background 150ms ease, box-shadow 150ms ease;
+    }
+
+    .icon-button:hover:not(:disabled) {
+      background: var(--white);
+      box-shadow: 0 1px 2px rgb(15 23 42 / 0.12);
+    }
+
+    .step-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--slate-900);
+    }
+
+    .hint {
+      color: var(--slate-500);
+      font-size: 12px;
+      margin: 4px 0 0;
+    }
+
+    .callout {
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .callout.info {
+      background: var(--blue-50);
+      border-color: var(--blue-100);
+      color: var(--blue-800);
+    }
+
+    .callout.warning {
+      background: var(--amber-50);
+      border-color: var(--amber-100);
+      color: var(--amber-800);
+    }
+
+    .callout.danger {
+      background: var(--red-50);
+      border-color: var(--red-100);
+      color: var(--red-700);
+    }
+
+    .callout-title {
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .callout.info .callout-title {
+      color: var(--blue-700);
+    }
+
+    .callout.warning .callout-title {
+      color: var(--amber-700);
+    }
+
+    .callout.danger .callout-title {
+      color: var(--red-700);
+    }
+
+    .callout p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .topic-block {
+      position: relative;
+    }
+
+    .section-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      gap: 8px;
+      color: var(--slate-500);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .rebalance {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 26px;
+      border-radius: 999px;
+      padding: 4px 12px;
+      background: var(--amber-100);
+      color: var(--amber-700);
+      font-size: 12px;
+      font-weight: 800;
+      opacity: 0;
+      transform: translateY(-2px);
+      transition: opacity 300ms ease, transform 300ms ease;
+      white-space: nowrap;
+    }
+
+    .rebalance.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .partitions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .partition {
+      position: relative;
+      overflow: hidden;
+      min-height: 94px;
+      border: 0;
+      border-bottom: 4px solid var(--slate-900);
+      border-radius: 8px;
+      background: var(--slate-800);
+      color: var(--white);
+      box-shadow: 0 10px 15px rgb(15 23 42 / 0.16);
+      text-align: center;
+      padding: 18px 12px;
+    }
+
+    .partition-dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #4ade80;
+      opacity: 0.5;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .partition small,
+    .partition strong {
+      display: block;
+    }
+
+    .partition small {
+      font-size: 12px;
+      opacity: 0.6;
+    }
+
+    .partition strong {
+      margin-top: 2px;
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .connector {
+      display: flex;
+      justify-content: center;
+      padding: 8px 0;
+    }
+
+    .connector-line {
+      width: 4px;
+      height: 32px;
+      border-radius: 999px;
+      background: var(--slate-300);
+      opacity: 1;
+      transform-origin: top;
+      transition: opacity 500ms ease, transform 500ms ease;
+    }
+
+    .connector-line.hidden {
+      opacity: 0;
+      transform: scaleY(0);
+    }
+
+    .instances {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .instance {
+      border-width: 2px;
+      border-radius: 16px;
+      padding: 24px;
+      transition: border-color 500ms ease, opacity 500ms ease, transform 500ms ease, filter 500ms ease, background 500ms ease;
+    }
+
+    .instance.rebalancing {
+      border-color: var(--indigo-400);
+      opacity: 0.78;
+      transform: scale(0.98);
+    }
+
+    .instance.dead {
+      background: var(--slate-100);
+      border-color: var(--red-200);
+      opacity: 0.64;
+      filter: grayscale(1);
+    }
+
+    .instance-head {
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--slate-100);
+    }
+
+    .instance-title {
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .icon-tile {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--indigo-100);
+      color: var(--indigo-600);
+    }
+
+    .icon-tile.dead {
+      background: var(--red-100);
+      color: var(--red-600);
+    }
+
+    .instance-name {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--slate-900);
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .pid {
+      margin: 2px 0 0;
+      color: var(--slate-500);
+      font-size: 12px;
+      font-style: italic;
+    }
+
+    .status-pill {
+      border-radius: 999px;
+      background: var(--red-100);
+      color: var(--red-600);
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .power-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 38px;
+      border: 1px solid var(--red-200);
+      border-radius: 8px;
+      background: var(--red-50);
+      color: var(--red-600);
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 800;
+      white-space: nowrap;
+      transition: background 150ms ease;
+    }
+
+    .power-button:hover {
+      background: var(--red-100);
+    }
+
+    .power-button.restart {
+      border-color: var(--emerald-100);
+      background: var(--emerald-50);
+      color: var(--emerald-600);
+    }
+
+    .power-button.restart:hover {
+      background: var(--emerald-100);
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .app-card {
+      border-radius: 12px;
+      background: var(--slate-50);
+      padding: 16px;
+    }
+
+    .app-head {
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .app-id {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border: 1px solid var(--slate-200);
+      border-radius: 4px;
+      background: var(--white);
+      color: var(--slate-500);
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .thread-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .thread {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 76px;
+      border-radius: 8px;
+      padding: 12px;
+      transition: border-color 150ms ease;
+    }
+
+    .thread:hover {
+      border-color: var(--indigo-300);
+    }
+
+    .thread-head {
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .thread-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--slate-600);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .thread-name.dead {
+      color: var(--slate-400);
+      text-decoration: line-through;
+    }
+
+    .state-note {
+      color: var(--slate-400);
+      font-size: 10px;
+      font-style: italic;
+    }
+
+    .state-note.dead {
+      color: var(--red-400);
+      font-weight: 800;
+      font-style: normal;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .task-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 4px;
+      padding: 4px 8px;
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 800;
+      box-shadow: 0 1px 2px rgb(15 23 42 / 0.12);
+    }
+
+    .task-badge.primary {
+      background: var(--indigo-500);
+    }
+
+    .task-badge.secondary {
+      background: var(--emerald-500);
+    }
+
+    .footer {
+      margin-top: 64px;
+      border-top: 1px solid var(--slate-200);
+      padding: 32px 0 48px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+
+    .footer h4 {
+      margin: 0 0 12px;
+      color: var(--slate-900);
+      font-weight: 800;
+    }
+
+    .footer p {
+      margin: 0;
+      color: var(--slate-600);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .icon {
+      display: inline-block;
+      flex: 0 0 auto;
+      width: 1em;
+      height: 1em;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      vertical-align: -0.15em;
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.45;
+      }
+      50% {
+        transform: scale(1.35);
+        opacity: 1;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .page {
+        padding: 32px;
+      }
+
+      .app-grid,
+      .footer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .layout {
+        grid-template-columns: minmax(240px, 1fr) minmax(0, 3fr);
+      }
+
+      .footer-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .section-row,
+      .instance-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .power-button {
+        width: 100%;
+      }
+
+      .partitions {
+        gap: 8px;
+      }
+
+      .partition {
+        min-height: 82px;
+        padding: 15px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    const state = {
+      partitionsCount: 3,
+      instances: [{ id: 1, isAlive: true }],
+      nextId: 2,
+      threadsPerInstance: 1,
+      isRebalancing: true,
+      rebalanceTimer: null,
+      appIds: ["Order-Processor-App", "Analytics-App"]
+    };
+
+    const iconPaths = {
+      activity: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>',
+      alert: '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path>',
+      cpu: '<rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><path d="M9 1v3"></path><path d="M15 1v3"></path><path d="M9 20v3"></path><path d="M15 20v3"></path><path d="M20 9h3"></path><path d="M20 14h3"></path><path d="M1 9h3"></path><path d="M1 14h3"></path>',
+      info: '<circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path>',
+      layers: '<path d="m12 2 10 5-10 5L2 7l10-5Z"></path><path d="m2 17 10 5 10-5"></path><path d="m2 12 10 5 10-5"></path>',
+      minus: '<path d="M5 12h14"></path>',
+      plus: '<path d="M12 5v14"></path><path d="M5 12h14"></path>',
+      power: '<path d="M12 2v10"></path><path d="M18.4 6.6a9 9 0 1 1-12.8 0"></path>',
+      refresh: '<path d="M21 12a9 9 0 0 0-9-9 9.8 9.8 0 0 0-6.7 2.7L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.8 9.8 0 0 0 6.7-2.7L21 16"></path><path d="M16 16h5v5"></path>',
+      server: '<rect x="2" y="3" width="20" height="8" rx="2"></rect><rect x="2" y="13" width="20" height="8" rx="2"></rect><path d="M6 7h.01"></path><path d="M6 17h.01"></path>',
+      serverCrash: '<path d="M6 10H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"></path><path d="M6 14H4a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2h-2"></path><path d="m12 10-2 4h4l-2 4"></path><path d="M6 6h.01"></path><path d="M6 18h.01"></path>',
+      settings: '<path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.2a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.3a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.3a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.2a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.2a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.3a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.3a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.2a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2Z"></path><circle cx="12" cy="12" r="3"></circle>'
+    };
+
+    function icon(name, size = 18, className = "") {
+      return `<svg class="icon ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true">${iconPaths[name]}</svg>`;
+    }
+
+    function getAssignment(appId) {
+      const activeInstances = state.instances.filter((inst) => inst.isAlive);
+      const totalActiveThreads = activeInstances.length * state.threadsPerInstance;
+      const assignments = [];
+
+      if (totalActiveThreads === 0) {
+        return assignments;
+      }
+
+      for (let p = 0; p < state.partitionsCount; p += 1) {
+        const globalThreadIndex = p % totalActiveThreads;
+        const activeInstanceIndex = Math.floor(globalThreadIndex / state.threadsPerInstance);
+        const internalThreadIndex = globalThreadIndex % state.threadsPerInstance;
+        const targetInstance = activeInstances[activeInstanceIndex];
+
+        assignments.push({
+          partition: p,
+          instanceId: targetInstance.id,
+          thread: internalThreadIndex,
+          appId
+        });
+      }
+
+      return assignments;
+    }
+
+    function triggerRebalance() {
+      state.isRebalancing = true;
+      clearTimeout(state.rebalanceTimer);
+      state.rebalanceTimer = setTimeout(() => {
+        state.isRebalancing = false;
+        render();
+      }, 1000);
+    }
+
+    function update(mutator) {
+      mutator();
+      triggerRebalance();
+      render();
+    }
+
+    function addInstance() {
+      if (state.instances.length >= 6) {
+        return;
+      }
+      update(() => {
+        state.instances.push({ id: state.nextId, isAlive: true });
+        state.nextId += 1;
+      });
+    }
+
+    function removeInstance() {
+      if (state.instances.length <= 1) {
+        return;
+      }
+      update(() => {
+        state.instances = state.instances.slice(0, -1);
+      });
+    }
+
+    function setThreads(delta) {
+      update(() => {
+        state.threadsPerInstance = Math.max(1, Math.min(4, state.threadsPerInstance + delta));
+      });
+    }
+
+    function toggleInstanceStatus(id) {
+      update(() => {
+        state.instances = state.instances.map((inst) => (
+          inst.id === id ? { ...inst, isAlive: !inst.isAlive } : inst
+        ));
+      });
+    }
+
+    function renderControlPanel(activeCount) {
+      const totalThreads = activeCount * state.threadsPerInstance;
+      const extraThreads = totalThreads - state.partitionsCount;
+      const overProvisioned = totalThreads > state.partitionsCount;
+      const outage = activeCount === 0;
+
+      return `
+        <aside class="sidebar">
+          <section class="panel">
+            <div class="panel-title">${icon("settings", 20)}<h2>Configuration</h2></div>
+            <div class="control-stack">
+              <div class="control">
+                <label>Total Application Nodes</label>
+                <div class="stepper">
+                  <button class="icon-button" type="button" data-action="remove-instance" ${state.instances.length <= 1 ? "disabled" : ""} aria-label="Remove instance">${icon("minus")}</button>
+                  <span class="step-value">${state.instances.length}</span>
+                  <button class="icon-button" type="button" data-action="add-instance" ${state.instances.length >= 6 ? "disabled" : ""} aria-label="Add instance">${icon("plus")}</button>
+                </div>
+                <p class="hint">Add/Remove physical servers or containers.</p>
+              </div>
+
+              <div class="control">
+                <label>Threads per Instance</label>
+                <div class="stepper">
+                  <button class="icon-button" type="button" data-action="threads-down" aria-label="Decrease threads">${icon("minus")}</button>
+                  <span class="step-value">${state.threadsPerInstance}</span>
+                  <button class="icon-button" type="button" data-action="threads-up" aria-label="Increase threads">${icon("plus")}</button>
+                </div>
+                <p class="hint">Configuring <code>num.stream.threads</code></p>
+              </div>
+            </div>
+          </section>
+
+          <section class="callout info">
+            <div class="callout-title">${icon("info")}<h3>Task Assignment</h3></div>
+            <p>
+              Notice how a single thread will take on <b>multiple tasks</b> if there aren't enough threads available.
+              <br><br>
+              Try crashing an instance to see tasks migrate to the survivors!
+            </p>
+          </section>
+
+          ${overProvisioned ? `
+            <section class="callout warning">
+              <div class="callout-title">${icon("alert")}<h3>Over-provisioning</h3></div>
+              <p>
+                You have ${totalThreads} active threads for 3 partitions.
+                The extra ${extraThreads} thread(s) will stay <b>idle</b> for each application.
+              </p>
+            </section>
+          ` : ""}
+
+          ${outage ? `
+            <section class="callout danger">
+              <div class="callout-title">${icon("serverCrash")}<h3>Complete Outage</h3></div>
+              <p>All instances are crashed! Processing has stopped completely.</p>
+            </section>
+          ` : ""}
+        </aside>
+      `;
+    }
+
+    function renderPartitions() {
+      return `
+        <section class="topic-block">
+          <div class="section-row">
+            <h3 class="section-title">${icon("layers", 16)} Kafka Topic: "input-topic"</h3>
+            <div class="rebalance ${state.isRebalancing ? "visible" : ""}">
+              ${icon("refresh", 14, "spin")}
+              <span>Group Coordinator is rebalancing tasks...</span>
+            </div>
+          </div>
+          <div class="partitions">
+            ${[0, 1, 2].map((partition) => `
+              <div class="partition">
+                <div class="partition-dot"></div>
+                <small>PARTITION</small>
+                <strong>${partition}</strong>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderInstances(assignments) {
+      return `
+        <section class="instances">
+          ${state.instances.map((inst) => {
+            const instanceClass = [
+              "instance",
+              state.isRebalancing && inst.isAlive ? "rebalancing" : "",
+              !inst.isAlive ? "dead" : ""
+            ].filter(Boolean).join(" ");
+
+            return `
+              <article class="${instanceClass}">
+                <div class="instance-head">
+                  <div class="instance-title">
+                    <div class="icon-tile ${inst.isAlive ? "" : "dead"}">${inst.isAlive ? icon("server", 24) : icon("serverCrash", 24)}</div>
+                    <div>
+                      <div class="instance-name">
+                        Application Instance ${inst.id}
+                        ${!inst.isAlive ? '<span class="status-pill">Crashed</span>' : ""}
+                      </div>
+                      <p class="pid">JVM Process (PID: ${1000 + inst.id})</p>
+                    </div>
+                  </div>
+                  <button class="power-button ${inst.isAlive ? "" : "restart"}" type="button" data-action="toggle-instance" data-id="${inst.id}">
+                    ${inst.isAlive ? `${icon("power", 16)} Crash Instance` : `${icon("activity", 16)} Restart Instance`}
+                  </button>
+                </div>
+                <div class="app-grid">
+                  ${state.appIds.map((appId, appIdx) => renderApplication(inst, appId, appIdx, assignments)).join("")}
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </section>
+      `;
+    }
+
+    function renderApplication(inst, appId, appIdx, assignments) {
+      const myTasks = assignments
+        .find((assignment) => assignment.appId === appId)
+        .tasks
+        .filter((task) => task.instanceId === inst.id);
+
+      return `
+        <section class="app-card">
+          <div class="app-head">
+            <span class="app-id">ID: ${appId}</span>
+          </div>
+          <div class="thread-list">
+            ${Array.from({ length: state.threadsPerInstance }).map((_, threadIdx) => {
+              const tasksOnThisThread = myTasks.filter((task) => task.thread === threadIdx);
+              const cpuColor = inst.isAlive && tasksOnThisThread.length > 0 ? "color: var(--indigo-500)" : "color: var(--slate-300)";
+
+              return `
+                <div class="thread">
+                  <div class="thread-head">
+                    <div class="thread-name ${inst.isAlive ? "" : "dead"}">
+                      <span style="${cpuColor}">${icon("cpu", 14)}</span>
+                      <span>StreamThread-${threadIdx + 1}</span>
+                    </div>
+                    ${inst.isAlive && tasksOnThisThread.length === 0 ? '<span class="state-note">Idle</span>' : ""}
+                    ${!inst.isAlive ? '<span class="state-note dead">Dead</span>' : ""}
+                  </div>
+                  ${inst.isAlive && tasksOnThisThread.length > 0 ? `
+                    <div class="badges">
+                      ${tasksOnThisThread.map((task) => `
+                        <span class="task-badge ${appIdx === 0 ? "primary" : "secondary"}">
+                          ${icon("layers", 10)} TASK ${task.partition}
+                        </span>
+                      `).join("")}
+                    </div>
+                  ` : ""}
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderFooter() {
+      return `
+        <footer class="footer shell">
+          <div class="footer-grid">
+            <section>
+              <h4>1. Tasks group in Threads</h4>
+              <p>
+                If there are fewer active threads than partitions, a single thread will iterate over <b>multiple tasks</b>.
+                You can see this when running 1 instance with 1 thread: it handles all 3 tasks.
+              </p>
+            </section>
+            <section>
+              <h4>2. Separate Consumer Groups</h4>
+              <p>
+                Because the objects use different <code>application.id</code>s, crashing an instance causes <b>both</b>
+                groups to rebalance independently, as they are separate logical entities running in the same JVM process.
+              </p>
+            </section>
+            <section>
+              <h4>3. High Availability in Action</h4>
+              <p>
+                When you click <b>"Crash Instance"</b>, the group coordinator detects the node has left. It revokes its
+                assignments and redistributes them to the surviving instances, ensuring no partitions are left unread.
+              </p>
+            </section>
+          </div>
+        </footer>
+      `;
+    }
+
+    function render() {
+      const activeCount = state.instances.filter((inst) => inst.isAlive).length;
+      const assignments = state.appIds.map((appId) => ({
+        appId,
+        tasks: getAssignment(appId)
+      }));
+
+      document.getElementById("app").innerHTML = `
+        <div class="page">
+          <header class="header shell">
+            <h1>Consumers Rebalance Internal</h1>
+            <p>Visualizing 3 Partitions with 2 Application Objects (Different App IDs)</p>
+          </header>
+
+          <main class="layout shell">
+            ${renderControlPanel(activeCount)}
+            <div class="canvas">
+              ${renderPartitions()}
+              <div class="connector"><div class="connector-line ${state.isRebalancing ? "hidden" : ""}"></div></div>
+              ${renderInstances(assignments)}
+            </div>
+          </main>
+
+          ${renderFooter()}
+        </div>
+      `;
+    }
+
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) {
+        return;
+      }
+
+      const action = button.dataset.action;
+      if (action === "add-instance") {
+        addInstance();
+      }
+      if (action === "remove-instance") {
+        removeInstance();
+      }
+      if (action === "threads-down") {
+        setThreads(-1);
+      }
+      if (action === "threads-up") {
+        setThreads(1);
+      }
+      if (action === "toggle-instance") {
+        toggleInstanceStatus(Number(button.dataset.id));
+      }
+    });
+
+    render();
+    triggerRebalance();
+  </script>
+</body>
+</html>
