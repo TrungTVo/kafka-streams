@@ -3,6 +3,7 @@ package io.confluent.developer.errors;
 import io.confluent.developer.StreamsUtils;
 import org.apache.kafka.clients.admin.Admin;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -13,6 +14,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class TopicLoader {
@@ -32,9 +34,15 @@ public class TopicLoader {
             final String outputTopic = properties.getProperty("error.output.topic");
             var topics = List.of(StreamsUtils.createTopic(inputTopic), StreamsUtils.createTopic(outputTopic));
             try {
-                CreateTopicsResult createTopicsResult = adminClient.createTopics(topics);
-                createTopicsResult.all().get(); // Wait for topics to be created
-                System.out.println("Topics created successfully");
+                final Set<String> existingTopics = adminClient.listTopics().names().get();
+                final List<NewTopic> topicsToCreate = StreamsUtils.topicsToCreate(topics, existingTopics);
+                if (!topicsToCreate.isEmpty()) {
+                    CreateTopicsResult createTopicsResult = adminClient.createTopics(topicsToCreate);
+                    createTopicsResult.all().get(); // Wait for topics to be created
+                    System.out.println("Topics created successfully");
+                } else {
+                    System.out.println("Topics already exist");
+                }
 
                 Callback callback = StreamsUtils.callback();
 

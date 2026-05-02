@@ -52,6 +52,7 @@ var basePackage = 'io.confluent.developer.'
 def exerciseMap = [aggregate: basePackage + 'aggregate.StreamsAggregate',
                    reduce    : basePackage + 'reduce.StreamsReduce',
                    basic    : basePackage + 'basic.BasicStreams',
+                   errors_topic_loader: basePackage + 'errors.TopicLoader',
                    errors: basePackage + 'errors.StreamsErrorHandling',
                    joins_topic_loader: basePackage + 'joins.TopicLoader',
                    joins: basePackage + 'joins.StreamsJoin',

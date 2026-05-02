@@ -10,8 +10,11 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class StreamsUtils {
 
@@ -53,5 +56,11 @@ public class StreamsUtils {
 
     public static NewTopic createTopic(final String topicName) {
         return new NewTopic(topicName, PARTITIONS, REPLICATION_FACTOR);
+    }
+
+    public static List<NewTopic> topicsToCreate(final List<NewTopic> topics, final Set<String> existingTopics) {
+        return topics.stream()
+                     .filter(topic -> !existingTopics.contains(topic.name()))
+                     .collect(Collectors.toList());
     }
 }
